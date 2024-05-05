@@ -17,5 +17,5 @@ client.start()
 client.connect_to("127.0.0.1", 65434)
 
 
-client.send_message(struct.pack('>BI', 0xA, 0b11001010))
+client.send_message(struct.pack('>BI', 0xA, 0b11001010).hex())
 
