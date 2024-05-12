@@ -17,6 +17,7 @@ while 1:
         cur_nodes+=1
         print("[SERV] New node connected")
 
-
-    if input() == 's':
-        server.send_bitstream('math', 0x00, (15,1,3))
+    inp = input()
+    if inp.startswith('sm'):
+        inpl = inp.split()
+        server.send_bitstream('math', int(inpl[1]), tuple(int(x) for x in inpl[2:]) )
