@@ -13,3 +13,4 @@ model = ML.MLP([
 ])
 
 print(model)
+model.train_normal()

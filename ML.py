@@ -1,21 +1,20 @@
 import random
 import math
 
-import numpy as np
-
 activation_functs = {
     'linear': lambda x: x,
-    'sigmoid': lambda x: 1 / (1 + np.exp(-x)),
-    'relu': lambda x: np.maximum(0, x),
-    'tanh': lambda x: np.tanh(x),
-    'softplus': lambda x: np.log1p(np.exp(x))
+    'sigmoid': lambda x: 1 / (1 + math.exp(-x)),
+    'relu': lambda x: x if x > 0 else 0,
+    'tanh': lambda x: math.tanh(x),
+    'softplus': lambda x: math.log1p(math.exp(x))
 }
-activation_functs_derivatives ={    
-    'linear':   lambda x: np.ones_like(x),
-    'sigmoid':  lambda x: (1 / (1 + np.exp(-x))) * (1 - (1 / (1 + np.exp(-x)))),
-    'relu':     lambda x: np.where(x > 0, 1, 0),
-    'tanh':     lambda x: 1 - np.tanh(x) ** 2,
-    'softplus': lambda x: 1 / (1 + np.exp(-x))
+
+activation_functs_derivatives = {
+    'linear': lambda x: 1,
+    'sigmoid': lambda x: (sig := 1 / (1 + math.exp(-x))) * (1 - sig),
+    'relu': lambda x: 1 if x > 0 else 0,
+    'tanh': lambda x: 1 - math.tanh(x) ** 2,
+    'softplus': lambda x: 1 / (1 + math.exp(-x))
 }
 
 class Neuron:
