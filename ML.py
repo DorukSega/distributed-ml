@@ -1,13 +1,22 @@
 import random
 import math
 
+import numpy as np
+
 activation_functs = {
     'linear': lambda x: x,
-    'sigmoid': lambda x: 1 / (1 + math.exp(-x)),
-    'relu': lambda x: max(0, x),
-    'tanh': lambda x: math.tanh(0, x)
+    'sigmoid': lambda x: 1 / (1 + np.exp(-x)),
+    'relu': lambda x: np.maximum(0, x),
+    'tanh': lambda x: np.tanh(x),
+    'softplus': lambda x: np.log1p(np.exp(x))
 }
-
+activation_functs_derivatives ={    
+    'linear':   lambda x: np.ones_like(x),
+    'sigmoid':  lambda x: (1 / (1 + np.exp(-x))) * (1 - (1 / (1 + np.exp(-x)))),
+    'relu':     lambda x: np.where(x > 0, 1, 0),
+    'tanh':     lambda x: 1 - np.tanh(x) ** 2,
+    'softplus': lambda x: 1 / (1 + np.exp(-x))
+}
 
 class Neuron:
     def __init__(self, nin, a_type='linear'):
@@ -91,4 +100,3 @@ class MLP:
 
             ## print loss every epoch
             print("Epoch:", epoch + 1, "Loss:", total_loss)
-
