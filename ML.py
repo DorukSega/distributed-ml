@@ -11,17 +11,20 @@ activation_functs = {
 
 activation_functs_derivatives = {
     'linear': lambda x: 1,
-    'sigmoid': lambda x: (sig := 1 / (1 + math.exp(-x))) * (1 - sig),
+    'sigmoid': lambda x: (lambda s: s * (1 - s))(1 / (1 + math.exp(-x))),
     'relu': lambda x: 1 if x > 0 else 0,
     'tanh': lambda x: 1 - math.tanh(x) ** 2,
     'softplus': lambda x: 1 / (1 + math.exp(-x))
 }
 
 class Neuron:
-    def __init__(self, nin, a_type='linear'):
+    def __init__(self, nin, a_type='linear', _children=()):
         self.W = [random.uniform(-1,1) for _ in range(nin)]
         self.b = 0
         self.activation_type = a_type
+        self.grad = 0
+        self._backward = lambda: None   #takes grad from previous and give the next one
+        self._prev = set(_children)     # previously used variables memory
 
     def linear(self, X):
         return sum((wi*xi for wi,xi in zip(self.W, X)), self.b) # w*x + b
@@ -36,6 +39,36 @@ class Neuron:
         else:
             # TODO: check if activation type is unknown
             return activation_functs[self.activation_type](z) * 1.0
+    
+    #WILL CHANGE copy from micrograd
+    def backward(self):
+
+        # topological order all of the children in the graph
+        topo = []
+        visited = set()
+        # object list unordered collection of unique object
+
+        #topo sort all edges goes left to right one way
+        # goes all children than add itself
+        def build_topo(v):
+            if v not in visited:
+            # go each unique item
+                visited.add(v)
+                # add objects to object list
+                for child in v._prev:
+                    # repeat for each child 
+                    #and make bottom to top list
+                    build_topo(child)
+                topo.append(v)
+                # append each with childrens
+
+        build_topo(self)
+
+        # go one variable at a time and apply the chain rule to get its gradient
+        self.grad = 1
+        for v in reversed(topo):
+            v._backward()
+
 
 
 class Layer:
@@ -76,6 +109,7 @@ class MLP:
 
     def train_normal(self, X_train, y_train, learning_rate, epochs=1):
         for epoch in range(epochs):
+            total_loss = 0
             for X, y in zip(X_train, y_train):
                 output = X # input
                 for layer in self.layers:
@@ -84,8 +118,12 @@ class MLP:
                     ###
 
                 ### compute loss, can be split
-                loss = [(o - yt) for o, yt in zip(output, y)]
-                total_loss += sum(loss)
+                loss = [(o - yt)**2 for o, yt in zip(output, y)]
+                total_loss += sum(loss)/ len(loss)
+                #new weight = weight old - (derivate loss/ derivative weight) * learning rate
+                #derivate loss/ derivative weight =
+                #derivate (loss) + derivate(activation) + derivate(weight) 
+
                 # Backward pass
                 reversed_layers = list(self.layers)
                 reversed_layers.reverse()

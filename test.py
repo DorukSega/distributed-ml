@@ -13,4 +13,6 @@ model = ML.MLP([
 ])
 
 print(model)
-model.train_normal()
+X=[1,0,1]
+Y= [0,1,1]
+model.train_normal(X,Y,0.01)
