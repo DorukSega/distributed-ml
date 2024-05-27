@@ -41,7 +41,7 @@ class Neuron:
             return activation_functs[self.activation_type](z) * 1.0
     
     #WILL CHANGE copy from micrograd
-    def backward(self):
+    def micro_backward(self):
 
         # topological order all of the children in the graph
         topo = []
