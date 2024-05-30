@@ -15,4 +15,5 @@ model = ML.MLP([
 print(model)
 X=[1,0,1]
 Y= [0,1,1]
+
 model.train_normal(X,Y,0.01)

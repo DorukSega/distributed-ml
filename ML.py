@@ -111,9 +111,14 @@ class MLP:
         for epoch in range(epochs):
             total_loss = 0
             for X, y in zip(X_train, y_train):
-                output = X # input
+                output = X_train #input
                 for layer in self.layers:
                     ###
+                    #   interfere here take all neurons from [neuron.forward(output) for neuron in layer.neurons]
+                    #   send into client 
+                    #   client calculate each neuron and send into server (bistream method or json)
+                    #   take answer from server and put into nex layer as new neuron
+
                     output = [neuron.forward(output) for neuron in layer.neurons]
                     ###
 
