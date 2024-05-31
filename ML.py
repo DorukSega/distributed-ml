@@ -1,107 +1,106 @@
-import random
-import math
+import numpy as np
 
-activation_functs = {
-    'linear': lambda x: x,
-    'relu': lambda x: max(0, x),
-    'sigmoid': lambda x: 1 / (1 + math.exp(-x)),
-    'tanh': lambda x: math.tanh(x)
+# Define activation functions and their derivatives
+activation_functions = {
+    'relu': (lambda x: np.maximum(0, x), lambda x: np.where(x > 0, 1, 0)),
+    'sigmoid': (lambda x: 1 / (1 + np.exp(-x)), lambda x: x * (1 - x))
 }
 
-activation_functs_derivatives = {
-    'linear': lambda x: 1,
-    'relu': lambda x: max(0, x),
-    'sigmoid': lambda x: (lambda s: s * (1 - s))(1 / (1 + math.exp(-x))),
-    'tanh': lambda x: 1 - math.tanh(x) ** 2
-}
+def forward_net(W, X, b, activation):
+    W = np.array(W)
+    X = np.array(X)
+    b = np.array(b)
+    z = np.dot(W, X) + b
+    f_activation, _ = activation_functions[activation]
+    a = f_activation(z)
+    return a
 
 class Neuron:
-    def __init__(self, nin, a_type='linear'):
-        self.W = [random.uniform(-1,1) for _ in range(nin)]
-        self.b = 0
-        self.activation_type = a_type
+    def __init__(self, n_inputs, activation):
+        self.weights = np.random.randn(n_inputs)
+        self.bias = np.random.randn()
+        self.activation_type = activation
+        self.activation, self.activation_derivative = activation_functions[activation]
+    
+    def backward(self, dvalue):
+        self.dactivation = self.activation_derivative(self.output) * dvalue
+        self.dweights = self.inputs * self.dactivation
+        self.dbias = self.dactivation
+        self.dinputs = self.dactivation * self.weights
+        return self.dinputs
 
-    def linear(self, X):
-        return sum((wi*xi for wi,xi in zip(self.W, X)), self.b) # w*x + b
-
-    def forward(self, X): # forward pass
-        if type(X) != list:
-            X = [X]
-        z = self.linear(X)
-
-        if self.activation_type == 'linear':
-            return z * 1.0 # result
-        else:
-            # TODO: check if activation type is unknown
-            return activation_functs[self.activation_type](z) * 1.0
-
-    def backward(self, delta, output):
-        derivative = activation_functs_derivatives[self.activation_type](output)
-        gradient = delta * derivative
-        return [gradient * w for w in self.W], gradient * self.b
-
+    def update(self, learning_rate):
+        self.weights -= learning_rate * self.dweights
+        self.bias -= learning_rate * self.dbias
 
 class Layer:
-    def __init__(self, n_neuron, nin, a_type='linear'):
-        self.activation = a_type
-        self.size = n_neuron
-        self.neurons = [Neuron(nin, a_type) for _ in range(n_neuron)]
-        
-
-class Dense:
-    def __init__(self, activation, n_neuron, input_shape=None):
-        self.n_neuron = n_neuron
+    def __init__(self, activation, n_neurons, input_shape=None):
         self.activation = activation
+        self.n_neurons = n_neurons
         self.input_shape = input_shape
-        
-class MLP:
-    def __init__(self, layers: list[Dense]):
-        self.layers: list[Layer] = []
-        past_n_neuron = 0
-        for dense in layers:
-            if not past_n_neuron: # first time
-                assert(dense.input_shape != None) 
-                self.input_size = dense.input_shape
-            if dense.input_shape:
-                past_n_neuron = dense.input_shape
-
-            self.layers.append(Layer(dense.n_neuron, past_n_neuron, dense.activation))
-            past_n_neuron = dense.n_neuron
+        self.neurons = []
     
-    def __repr__(self):
-        result = "MLP (\n"
-        result += f"  input, {self.input_size}\n"
-        for layer in self.layers:
-            result += f"  {layer.activation}, {layer.size}\n"
-        result += ")\n"
-        return result
+    def initialize(self, input_shape):
+        self.neurons = [Neuron(input_shape, self.activation) for _ in range(self.n_neurons)]
+    
+    def forward(self, inputs):
+        self.inputs = np.array(inputs)
+        outputs = []
+        net = False
+        if net:
+            pass
+        else:
+            for neuron in self.neurons:
+                neuron.inputs = np.array(inputs)
+                neuron.output = forward_net(neuron.weights, inputs, neuron.bias, self.activation)
+                #neuron.output = neuron.forward(inputs) 
+                outputs.append(neuron.output)
+        self.outputs = np.array(outputs)
+        return self.outputs
+    
+    def backward(self, dvalues):
+        dvalues = np.array(dvalues)
+        dinputs = np.zeros(self.inputs.shape)
+        for i, neuron in enumerate(self.neurons):
+            dinputs += neuron.backward(dvalues[i])
+        return dinputs
+    
+    def update(self, learning_rate):
+        for neuron in self.neurons:
+            neuron.update(learning_rate)
 
-    def forward(self, X):
-        output = X
+class MLP:
+    def __init__(self, layers):
+        self.layers = layers
+        for i, layer in enumerate(self.layers):
+            input_shape = self.layers[i-1].n_neurons if i > 0 else layer.input_shape
+            layer.initialize(input_shape)
+    
+    def forward(self, inputs):
         for layer in self.layers:
-            output = [neuron.forward(output) for neuron in layer.neurons]
-        return output
-
-    def train_normal(self, X_train, y_train, learning_rate, epochs=1):
+            inputs = layer.forward(inputs)
+        return inputs
+    
+    def backward(self, y_true):
+        dvalue = self.output - y_true
+        for layer in reversed(self.layers):
+            dvalue = layer.backward(dvalue)
+    
+    def train(self, X_train, y_train, learning_rate, epochs):
         for epoch in range(epochs):
             total_loss = 0
-            for X, y in zip(X_train, y_train):
-                output = X 
+            for inputs, y_true in zip(X_train, y_train):
+                self.output = self.forward(inputs)
+                loss = np.mean((self.output - y_true) ** 2)
+                total_loss += loss
+                self.backward(y_true)
                 for layer in self.layers:
-                    ###
-                    output = [neuron.forward(output) for neuron in layer.neurons]
-                    ###
+                    layer.update(learning_rate)
+            avg_loss = total_loss / len(X_train)
+            if epoch % 100 == 0:
+                print(f'Epoch {epoch}, Loss: {avg_loss:.4f}')
+        return avg_loss
+    
+    def predict(self, inputs):
+        return self.forward(inputs)
 
-                # Computae loss
-                loss = [(o - yt)**2 for o, yt in zip(output, y)]
-                total_loss += sum(loss) / len(loss)
-
-                
-                # Gradient Descent
-
-                # Update weights and biases
-            
-               
-
-            ## print loss every epoch
-            print(f'Epoch {epoch+1}/{epochs}, Loss: {total_loss/len(X_train)}')
