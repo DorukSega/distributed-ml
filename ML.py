@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # Define activation functions and their derivatives
 activation_functions = {
     'relu': (lambda x: np.maximum(0, x), lambda x: np.where(x > 0, 1, 0)),
@@ -14,6 +15,16 @@ def forward_net(W, X, b, activation):
     f_activation, _ = activation_functions[activation]
     a = f_activation(z)
     return a
+
+def split_array(arr: list, n):
+    assert n > 0 # Number of groups should be greater than zero
+    if n > len(arr):
+        n_big = n
+        n = len(arr)
+    group_size = len(arr) // n
+    remainder = len(arr) % n
+    groups = [arr[i * group_size + min(i, remainder):(i + 1) * group_size + min(i + 1, remainder)] for i in range(n)]
+    return groups 
 
 class Neuron:
     def __init__(self, n_inputs, activation):
@@ -32,13 +43,17 @@ class Neuron:
     def update(self, learning_rate):
         self.weights -= learning_rate * self.dweights
         self.bias -= learning_rate * self.dbias
-
+        
+    def __repr__(self):
+        return (f"<Neuron>")
+            
 class Layer:
-    def __init__(self, activation, n_neurons, input_shape=None):
+    def __init__(self, activation, n_neurons, input_shape=None, net=False):
         self.activation = activation
         self.n_neurons = n_neurons
         self.input_shape = input_shape
         self.neurons = []
+        self.net = net
     
     def initialize(self, input_shape):
         self.neurons = [Neuron(input_shape, self.activation) for _ in range(self.n_neurons)]
@@ -46,14 +61,22 @@ class Layer:
     def forward(self, inputs):
         self.inputs = np.array(inputs)
         outputs = []
-        net = False
-        if net:
-            pass
+    
+        if self.net:
+            # TODO: add networking !!
+            client_count = 2
+            neuron_groups = split_array(self.neurons, client_count)
+            for group in neuron_groups:
+                group_outputs = []
+                for neuron in group:
+                    neuron.inputs = np.array(inputs)
+                    neuron.output = forward_net(neuron.weights, inputs, neuron.bias, self.activation)
+                    group_outputs.append(neuron.output)
+                outputs+= group_outputs
         else:
             for neuron in self.neurons:
                 neuron.inputs = np.array(inputs)
                 neuron.output = forward_net(neuron.weights, inputs, neuron.bias, self.activation)
-                #neuron.output = neuron.forward(inputs) 
                 outputs.append(neuron.output)
         self.outputs = np.array(outputs)
         return self.outputs
@@ -70,9 +93,11 @@ class Layer:
             neuron.update(learning_rate)
 
 class MLP:
-    def __init__(self, layers):
+    def __init__(self, layers, net=False):
         self.layers = layers
+        self.net = net
         for i, layer in enumerate(self.layers):
+            layer.net = net
             input_shape = self.layers[i-1].n_neurons if i > 0 else layer.input_shape
             layer.initialize(input_shape)
     
