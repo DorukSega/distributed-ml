@@ -296,8 +296,8 @@ class Node(threading.Thread):
 
     def send_message(self, data, reciever=None):
         # time that the message was sent
-        if reciever:
-            data = cf.encrypt(data, cf.load_key(reciever))
+        # if reciever:
+        #     data = cf.encrypt(data, cf.load_key(reciever))
         self.message("msg", data, {"rnid": reciever})
 
     def message(self, type, data, overides={}, ex=[]):
@@ -385,7 +385,7 @@ class Node(threading.Thread):
         else:
             self.announce(dta, n)
 
-        dta = self.encryption_handler(dta)
+        #dta = self.encryption_handler(dta)
         if not dta:
             return False
 
