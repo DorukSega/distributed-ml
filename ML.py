@@ -27,7 +27,6 @@ def split_array(arr: list, n):
                   * group_size + min(i + 1, remainder)] for i in range(n)]
     return groups
 
-
 class Neuron:
     def __init__(self, n_inputs, activation):
         self.weights = np.random.randn(n_inputs)

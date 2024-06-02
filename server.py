@@ -6,7 +6,6 @@ import typing
 import numpy as np
 from ML import MLP, Layer
 
-
 class Server:
     def __init__(self, host='127.0.0.1', port=50000):
         self.host = host
