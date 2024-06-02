@@ -113,7 +113,7 @@ if __name__ == "__main__":
             print("DIS pred:")
             for X in X_train:
                 prediction = model_dis.predict(X)
-                print(f"{X} -> {prediction[0]}")
+                print(f"{X} -> {1 if prediction[0] >= 0.5 else 0}")
 
             print("Starting Non Distrubuted")
             time.sleep(1)
@@ -127,7 +127,7 @@ if __name__ == "__main__":
             print("NotDIS pred:")
             for X in X_train:
                 prediction = model_ndis.predict(X)
-                print(f"{X} -> {prediction[0]}")
+                print(f"{X} -> {1 if prediction[0] >= 0.5 else 0}")
 
                 
             print(f"notdis time: {end_time - start_time:.4f}s")
