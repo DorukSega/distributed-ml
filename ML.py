@@ -1,7 +1,6 @@
 import numpy as np
-import network as nt
-import server as sv
 import time
+
 # activation functions and their derivatives
 activation_functions = {
     'relu': (lambda x: np.maximum(0, x), lambda x: np.where(x > 0, 1, 0)),
@@ -50,7 +49,7 @@ class Neuron:
     def __repr__(self):
         return (f"<Neuron>")
 
-def send_client(net: sv.ServerNode, inode: int, group:list[Neuron], inputs, activation):
+def send_client(net, inode: int, group:list[Neuron], inputs, activation):
     problem_group = []
     for neuron in group:
         problem_group.append({
@@ -58,11 +57,11 @@ def send_client(net: sv.ServerNode, inode: int, group:list[Neuron], inputs, acti
             'bias': [neuron.bias],
             'inputs': inputs.tolist()
         })
-    net.send_message({'activation': activation, 'pgroup': problem_group, 'id': inode, 'reciever':net.nodes_connected[inode].id})
+    net.send_message({'activation': activation, 'pgroup': problem_group, 'id': inode, 'reciever': net.get_addresses()[inode]}, net.get_addresses()[inode])
 
 
 class Layer:
-    def __init__(self, activation, n_neurons, input_shape=None, net: sv.ServerNode=None):
+    def __init__(self, activation, n_neurons, input_shape=None, net=None):
         self.activation = activation
         self.n_neurons = n_neurons
         self.input_shape = input_shape
@@ -78,13 +77,14 @@ class Layer:
         outputs = []
 
         if self.net:
-            neuron_groups = split_array(self.neurons, len(self.net.nodes_connected))
+            neuron_groups = split_array(self.neurons, len(self.net.clients))
             self.net.solutions = {}
 
             for i, group in enumerate(neuron_groups):
                 send_client(self.net, i, group, self.inputs, self.activation)
             while len(self.net.solutions) != len(neuron_groups):
-                time.sleep(2.2250738585072014e-308) 
+                time.sleep(2.2250738585072014e-308)
+       
             #print(f"{self.activation}-{self.n_neurons} Finished")
             for ix, group in enumerate(neuron_groups):
                 group_outputs = []
@@ -132,8 +132,7 @@ class MLP:
         self.net = net
         for i, layer in enumerate(self.layers):
             layer.net = net
-            input_shape = self.layers[i -
-                                      1].n_neurons if i > 0 else layer.input_shape
+            input_shape = self.layers[i -1].n_neurons if i > 0 else layer.input_shape
             layer.initialize(input_shape)
 
     def forward(self, inputs):
@@ -157,7 +156,8 @@ class MLP:
                 for layer in self.layers:
                     layer.update(learning_rate)
             avg_loss = total_loss / len(X_train)
-            print(f'Epoch {epoch}, Loss: {avg_loss:.4f}')
+            if (epoch % 100) == 0:
+                print(f'Epoch {epoch}, Loss: {avg_loss:.4f}')
         return avg_loss
 
     def predict(self, inputs):
