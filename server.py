@@ -37,3 +37,4 @@ if __name__ == "__main__":
 
         elif inp.startswith('n'):
             print(f"[SERV] nodes {len(server.nodes_connected)}")
+

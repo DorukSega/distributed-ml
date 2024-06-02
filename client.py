@@ -18,18 +18,20 @@ def is_port_in_use(port):
 
 class ClientNode(DMLNode):
     def on_message(self, message, sender, private):
-        activation = message['activation']
-        pgroup = message['pgroup']
-        inode = message['id']
-        outputs = []
-        for problem in pgroup:
-            weights= problem['weights'],
-            bias = problem['bias'],
-            inputs = problem['inputs']
-            output = forward_pass(weights, inputs, bias, activation)
-            outputs.append(output[0][0])
-        print(f"solving {activation}")
-        self.send_message({'outputs':outputs, 'id': inode}, sender)
+        reciever = message['reciever']
+        if reciever == self.id:
+            activation = message['activation']
+            pgroup = message['pgroup']
+            inode = message['id']
+            outputs = []
+            for problem in pgroup:
+                weights= problem['weights'],
+                bias = problem['bias'],
+                inputs = problem['inputs']
+                output = forward_pass(weights, inputs, bias, activation)
+                outputs.append(output[0][0])
+            print(f"{inode}, {activation}: {len(pgroup)}")
+            self.send_message({'outputs':outputs, 'id': inode}, sender)
 
 
 port = 65435

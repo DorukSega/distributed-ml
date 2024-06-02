@@ -1,5 +1,4 @@
 import numpy as np
-import asyncio
 import network as nt
 import server as sv
 import time
@@ -59,7 +58,7 @@ def send_client(net: sv.ServerNode, inode: int, group:list[Neuron], inputs, acti
             'bias': [neuron.bias],
             'inputs': inputs.tolist()
         })
-    net.send_message({'activation': activation, 'pgroup': problem_group, 'id': inode}, reciever=net.nodes_connected[inode].id)
+    net.send_message({'activation': activation, 'pgroup': problem_group, 'id': inode, 'reciever':net.nodes_connected[inode].id})
 
 
 class Layer:
@@ -81,12 +80,12 @@ class Layer:
         if self.net:
             neuron_groups = split_array(self.neurons, len(self.net.nodes_connected))
             self.net.solutions = {}
+
             for i, group in enumerate(neuron_groups):
                 send_client(self.net, i, group, self.inputs, self.activation)
             while len(self.net.solutions) != len(neuron_groups):
-                time.sleep(0.001) 
+                time.sleep(2.2250738585072014e-308) 
             #print(f"{self.activation}-{self.n_neurons} Finished")
-            
             for ix, group in enumerate(neuron_groups):
                 group_outputs = []
                 for iy, neuron in enumerate(group):
@@ -158,7 +157,6 @@ class MLP:
                 for layer in self.layers:
                     layer.update(learning_rate)
             avg_loss = total_loss / len(X_train)
-            
             print(f'Epoch {epoch}, Loss: {avg_loss:.4f}')
         return avg_loss
 
