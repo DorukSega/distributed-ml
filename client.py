@@ -43,7 +43,7 @@ class Client:
                 print(e)
                 print(message)
                 self.client_socket.close()
-            break
+                break
 
     def send_message(self, message):
         json_message = json.dumps(message)
