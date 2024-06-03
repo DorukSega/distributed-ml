@@ -35,14 +35,15 @@ class Client:
 
     def receive_messages(self):
         while self.connected:
-            # try:
-            message = self.client_socket.recv(200000).decode('utf-8')
-            self.handle_ML(json.loads(message))
-            # except Exception as e:
-            #     print(e)
-            #     print("Disconnected from server")
-            #     self.client_socket.close()
-            #     break
+            try:
+                message = self.client_socket.recv(200000).decode('utf-8')
+                self.handle_ML(json.loads(message))
+            except json.decoder.JSONDecodeError as e:
+                print("Disconnected from server")
+                print(e)
+                print(message)
+                self.client_socket.close()
+            break
 
     def send_message(self, message):
         json_message = json.dumps(message)
