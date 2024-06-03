@@ -14,6 +14,16 @@ def is_port_in_use(port):
                 return False
         return False
 
+def receive_until_valid_json(socket, buffer_size=1024):
+    buffer = ""
+    while True:
+        data = socket.recv(buffer_size).decode('utf-8')
+        buffer += data
+        try:
+            message = json.loads(buffer)
+            return message
+        except json.JSONDecodeError:
+            continue  # Continue receiving data if JSON is not yet valid
 
 class Client:
     def __init__(self, host='127.0.0.1', port=65432):
@@ -35,15 +45,9 @@ class Client:
 
     def receive_messages(self):
         while self.connected:
-            try:
-                message = self.client_socket.recv(200000).decode('utf-8')
-                self.handle_ML(json.loads(message))
-            except json.decoder.JSONDecodeError as e:
-                print("Disconnected from server")
-                print(e)
-                print(message)
-                self.client_socket.close()
-                break
+            message = receive_until_valid_json(self.client_socket)
+            self.handle_ML(json.loads(message))
+            
 
     def send_message(self, message):
         json_message = json.dumps(message)
