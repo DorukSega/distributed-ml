@@ -2,28 +2,8 @@ import socket
 import threading
 import json
 from ML import forward_pass
+from network import receive_full, pack_message, is_port_in_use
 
-def is_port_in_use(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.bind(('127.0.0.1', port))
-        except socket.error as e:
-            if e.errno == socket.errno.EADDRINUSE:
-                return True
-            else:
-                return False
-        return False
-
-def receive_until_valid_json(socket, buffer_size=1024):
-    buffer = ""
-    while True:
-        data = socket.recv(buffer_size).decode('utf-8')
-        buffer += data
-        try:
-            message = json.loads(buffer)
-            return message
-        except json.JSONDecodeError:
-            continue  # Continue receiving data if JSON is not yet valid
 
 class Client:
     def __init__(self, host='127.0.0.1', port=65432):
@@ -45,13 +25,12 @@ class Client:
 
     def receive_messages(self):
         while self.connected:
-            message = receive_until_valid_json(self.client_socket)
+            message = receive_full(self.client_socket)
             self.handle_ML(message)
             
-
     def send_message(self, message):
-        json_message = json.dumps(message)
-        self.client_socket.send(json_message.encode('utf-8'))
+        packed = pack_message(message)
+        self.client_socket.send(packed)
 
     def handle_ML(self, message):
         reciever = message['reciever']

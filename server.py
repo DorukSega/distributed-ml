@@ -5,6 +5,7 @@ import time
 import typing
 import numpy as np
 from ML import MLP, Layer
+from network import receive_full, pack_message
 
 class Server:
     def __init__(self, host='127.0.0.1', port=50000):
@@ -40,29 +41,29 @@ class Server:
     def handle_client(self, client_socket, address):
         while self.running:
             # try:
-            message = client_socket.recv(200000).decode('utf-8')
-            self.handle_ML(json.loads(message))
+            message = receive_full(client_socket)
+            self.handle_ML(message)
             # except:
             #     self.clients.pop(address)
             #     client_socket.close()
             #     break
 
-    def broadcast(self, message, client_socket, address):
-        for client in self.clients:
-            if client != client_socket:
-                try:
-                    client.send(message.encode('utf-8'))
-                except:
-                    self.clients.pop(address)
-                    client.close()
+    # def broadcast(self, message, client_socket, address):
+    #     for client in self.clients:
+    #         if client != client_socket:
+    #             try:
+    #                 client.send(message.encode('utf-8'))
+    #             except:
+    #                 self.clients.pop(address)
+    #                 client.close()
 
     def send_message(self, message, address=None):
-        json_message = json.dumps(message)
+        packed = pack_message(message)
         for cl_address, client in self.clients.items():
             if not address:
-                client.send(json_message.encode('utf-8'))
+                client.send(packed)
             elif address and cl_address == address:
-                client.send(json_message.encode('utf-8'))
+                client.send(packed)
 
     def handle_ML(self, message):
         id = message['id']
@@ -85,7 +86,7 @@ if __name__ == "__main__":
     X_train = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     y_train = np.array([[0], [1], [1], [0]])
 
-    server = Server("192.168.1.18")
+    server = Server()
     try:
         server.start_server()
     except KeyboardInterrupt:
