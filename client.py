@@ -81,7 +81,14 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             client.stop_client()
             exit(0)
-        if inp == 'c':
-            client.connect_to_server('127.0.0.1', 50000)
+
+        if inp.startswith('c'):
+            parts = inp.split()
+            if len(parts) == 3:
+                ip = parts[1]
+                port = int(parts[2])
+                client.connect_to_server(ip, port)
+            else:
+                client.connect_to_server('127.0.0.1', 50000)
         elif inp == 'x':
             break
