@@ -51,19 +51,18 @@ class Client:
 
     def handle_ML(self, message):
         reciever = message['reciever']
-        if reciever == self.get_selfaddress():
-            activation = message['activation']
-            pgroup = message['pgroup']
-            inode = message['id']
-            outputs = []
-            for problem in pgroup:
-                weights = problem['weights'],
-                bias = problem['bias'],
-                inputs = problem['inputs']
-                output = forward_pass(weights, inputs, bias, activation)
-                outputs.append(output[0][0])
-            print(f"{inode}, {activation}: {len(pgroup)}")
-            self.send_message({'outputs': outputs, 'id': inode})
+        activation = message['activation']
+        pgroup = message['pgroup']
+        inode = message['id']
+        outputs = []
+        for problem in pgroup:
+            weights = problem['weights'],
+            bias = problem['bias'],
+            inputs = problem['inputs']
+            output = forward_pass(weights, inputs, bias, activation)
+            outputs.append(output[0][0])
+        print(f"{inode}, {activation}: {len(pgroup)}")
+        self.send_message({'outputs': outputs, 'id': inode})
 
     def get_selfaddress(self):
         sock_adr = client.client_socket.getsockname()
@@ -75,7 +74,6 @@ class Client:
 
 if __name__ == "__main__":
     client = Client()
-
     while True:
         try:
             inp = input()
