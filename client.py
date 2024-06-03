@@ -46,7 +46,7 @@ class Client:
     def receive_messages(self):
         while self.connected:
             message = receive_until_valid_json(self.client_socket)
-            self.handle_ML(json.loads(message))
+            self.handle_ML(message)
             
 
     def send_message(self, message):
