@@ -1,3 +1,9 @@
 ___pycache___
 *.pyc
 .vscode
+
+target/
+debug/
+Cargo.lock
+**/*.rs.bk
+*.pdb
