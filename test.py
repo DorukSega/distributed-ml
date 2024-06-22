@@ -24,4 +24,4 @@ print(f"not dis: {end_time - start_time:.4f}s")
 print("Test Predictions:")
 for X in X_train:
     prediction = model.predict(X)
-    print(f"Input: {X}, Predicted: {prediction[0]}")
+    print(f"Input: {X}, Predicted: {prediction}")

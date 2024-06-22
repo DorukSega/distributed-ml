@@ -1,13 +1,21 @@
 import numpy as np
 import time
 
-# activation functions and their derivatives
+def softmax(x):
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0)
+
+def softmax_derivative(x):
+    s = softmax(x)
+    return np.diagflat(s) - np.dot(s, s.T)
+
 activation_functions = {
     'relu': (lambda x: np.maximum(0, x), lambda x: np.where(x > 0, 1, 0)),
-    'sigmoid': (lambda x: 1 / (1 + np.exp(-x)), lambda x: x * (1 - x))
+    'sigmoid': (lambda x: 1 / (1 + np.exp(-x)), lambda x: x * (1 - x)),
+    'softmax': (softmax, softmax_derivative),
 }
 
-def forward_pass(W, X, b, activation):
+def forward_pass(W:np.ndarray, X:np.ndarray, b:np.ndarray, activation:str):
     W = np.array(W)
     X = np.array(X)
     b = np.array(b)
@@ -96,7 +104,7 @@ class Layer:
             for neuron in self.neurons:
                 neuron.inputs = np.array(inputs)
                 neuron.output = forward_pass(
-                    neuron.weights, inputs, neuron.bias, self.activation)
+                    neuron.weights, neuron.inputs, neuron.bias, self.activation)
                 outputs.append(neuron.output)
         self.outputs = np.array(outputs)
         return self.outputs
